@@ -23,10 +23,13 @@ public class RandomGraphGenerator {
     }
 
     Graph generateGraph(Random r, int size, int numEdges) {
-        if (size < 1) throw new IllegalArgumentException("size must be >= 1");
-        if (numEdges < size - 1) throw new IllegalArgumentException("We need min size-1 edges");
+        if (size < 1)
+            throw new IllegalArgumentException("size must be >= 1");
+        if (numEdges < size - 1)
+            throw new IllegalArgumentException("We need min size-1 edges");
         long maxDirected = (long) size * (size - 1);
-        if (numEdges > maxDirected) throw new IllegalArgumentException("Too many edges for directed graph without self-loops");
+        if (numEdges > maxDirected)
+            throw new IllegalArgumentException("Too many edges for directed graph without self-loops");
 
         int[] perm = IntStream.range(0, size).toArray();
         for (int i = size - 1; i > 0; i--) {
@@ -55,7 +58,8 @@ public class RandomGraphGenerator {
 
         final SplittableRandom base = new SplittableRandom(r.nextLong());
         final SplittableRandom[] seeds = new SplittableRandom[threads];
-        for (int t = 0; t < threads; t++) seeds[t] = base.split();
+        for (int t = 0; t < threads; t++)
+            seeds[t] = base.split();
 
         long[] finalKeys = keys;
         IntStream.range(0, threads).parallel().forEach(t -> {
@@ -65,7 +69,8 @@ public class RandomGraphGenerator {
             for (int i = start; i < end; i++) {
                 int u = rnd.nextInt(size);
                 int v = rnd.nextInt(size - 1);
-                if (v >= u) v++;
+                if (v >= u)
+                    v++;
                 finalKeys[i] = pack(u, v);
             }
         });
@@ -89,7 +94,8 @@ public class RandomGraphGenerator {
 
             final SplittableRandom base2 = base.split();
             final SplittableRandom[] seeds2 = new SplittableRandom[threads];
-            for (int t = 0; t < threads; t++) seeds2[t] = base2.split();
+            for (int t = 0; t < threads; t++)
+                seeds2[t] = base2.split();
 
             final int offset2 = unique;
             final int chunk2 = (add + threads - 1) / threads;
@@ -100,7 +106,8 @@ public class RandomGraphGenerator {
                 for (int i = start; i < end; i++) {
                     int u = rnd.nextInt(size);
                     int v = rnd.nextInt(size - 1);
-                    if (v >= u) v++;
+                    if (v >= u)
+                        v++;
                     more[i] = pack(u, v);
                 }
             });

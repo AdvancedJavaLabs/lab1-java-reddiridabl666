@@ -43,4 +43,3 @@ tasks.register<JavaExec>("jcstress") {
         args = argsProp.split("\\s+".toRegex())
     }
 }
-
