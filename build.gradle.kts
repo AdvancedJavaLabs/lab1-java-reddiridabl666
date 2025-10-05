@@ -2,6 +2,7 @@ plugins {
     kotlin("jvm") version "1.9.20"
     java
     application
+    id("io.freefair.lombok") version "9.0.0-rc2"
 }
 
 group = "org.itmo"
@@ -15,6 +16,10 @@ dependencies {
     testImplementation(kotlin("test"))
     testImplementation("org.openjdk.jcstress:jcstress-core:0.16")
     testAnnotationProcessor("org.openjdk.jcstress:jcstress-core:0.16")
+
+
+    implementation("org.slf4j:slf4j-api:2.0.17")
+    implementation("org.slf4j:slf4j-simple:2.0.17")
 }
 
 tasks.test {
@@ -41,5 +46,18 @@ tasks.register<JavaExec>("jcstress") {
     val argsProp = project.findProperty("jcstressArgs") as String?
     if (!argsProp.isNullOrBlank()) {
         args = argsProp.split("\\s+".toRegex())
+    }
+}
+
+tasks.named<Test>("test") {
+    // Use JUnit Platform for unit tests.
+    useJUnitPlatform()
+    
+    testLogging {
+        events("started", "passed", "skipped", "failed")
+        // if (project.hasProperty("verbose")) {
+            showStandardStreams = true
+        // }
+        setExceptionFormat("full")
     }
 }
