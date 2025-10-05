@@ -5,6 +5,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import lombok.extern.slf4j.Slf4j;
@@ -33,17 +34,20 @@ class Graph {
     void parallelBFS(int startVertex) throws InterruptedException, ExecutionException {
         AtomicInteger visitedNum = new AtomicInteger(1);
 
-        boolean[] visited = new boolean[V];
+        AtomicBoolean[] visited = new AtomicBoolean[V];
+        for (int i = 0; i < V; ++i) {
+            visited[i] = new AtomicBoolean(false);
+        }
 
         List<Integer> layer = new ArrayList<>();
 
-        visited[startVertex] = true;
+        visited[startVertex].set(true);
         layer.add(startVertex);
 
-        int layerNum = 0;
+        // int layerNum = 0;
 
         while (!visitedNum.compareAndSet(V, V)) {
-            log.info("Visiting layer: {}", layerNum);
+            // log.info("Visiting layer: {}", layerNum);
 
             List<Future<List<Integer>>> futures = new ArrayList<>(layer.size());
 
@@ -63,21 +67,21 @@ class Graph {
                 layer.addAll(vertices);
             }
 
-            ++layerNum;
+            // ++layerNum;
         }
     }
 
-    List<Integer> visitChildrenOf(int vertex, boolean[] visited, AtomicInteger visitedNum) {
+    List<Integer> visitChildrenOf(int vertex, AtomicBoolean[] visited, AtomicInteger visitedNum) {
         List<Integer> next = new ArrayList<>(adjList[vertex].size());
 
         for (int n : adjList[vertex]) {
-            if (visited[n]) {
+            if (!visited[n].compareAndSet(false, true)) {
                 continue;
             }
 
-            visited[n] = true;
-            int totalVisited = visitedNum.incrementAndGet();
-            log.info("Visited vertex {}, total visited: {}/{}", n, totalVisited, V);
+            // int totalVisited =
+            visitedNum.incrementAndGet();
+            // log.info("Visited vertex {}, total visited: {}/{}", n, totalVisited, V);
 
             next.add(n);
         }
