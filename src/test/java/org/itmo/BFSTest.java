@@ -20,9 +20,6 @@ public class BFSTest {
         int[] connections = new int[] { 50, 500, 5000, 50_000, 100_000, 1_000_000,
                 1_000_000, 10_000_000, 10_000_000 };
 
-        // int[] sizes = new int[] { 10 };
-        // int[] connections = new int[] { 50 };
-
         Random r = new Random(42);
         try (FileWriter fw = new FileWriter("tmp/results.txt")) {
             for (int i = 0; i < sizes.length; i++) {

@@ -7,7 +7,6 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicInteger;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -16,7 +15,7 @@ class Graph {
     private final int V;
     private final ArrayList<Integer>[] adjList;
 
-    private final ExecutorService executorService = Executors.newFixedThreadPool(14);
+    private final ExecutorService executorService = Executors.newFixedThreadPool(28);
 
     Graph(int vertices) {
         this.V = vertices;
@@ -33,8 +32,6 @@ class Graph {
     }
 
     void parallelBFS(int startVertex) throws InterruptedException, ExecutionException {
-        // AtomicInteger visitedNum = new AtomicInteger(1);
-
         AtomicBoolean[] visited = new AtomicBoolean[V];
         for (int i = 0; i < V; ++i) {
             visited[i] = new AtomicBoolean(false);
@@ -45,50 +42,34 @@ class Graph {
         visited[startVertex].set(true);
         layer.add(startVertex);
 
-        // int layerNum = 0;
-
         while (!layer.isEmpty()) {
-            // log.info("Visiting layer: {}", layerNum);
             Queue<Integer> nextLayer = new ConcurrentLinkedQueue<>();
 
-            List<Future<List<Integer>>> futures = new ArrayList<>(layer.size());
+            List<Future<Void>> futures = new ArrayList<>(layer.size());
 
             while (!layer.isEmpty()) {
                 int vertex = layer.poll();
 
-                Future<List<Integer>> future = executorService
-                        .submit(() -> visitChildrenOf(vertex, visited, nextLayer));
+                Future<Void> future = executorService.submit(() -> visitChildrenOf(vertex, visited, nextLayer));
 
                 futures.add(future);
             }
 
             layer = nextLayer;
 
-            for (Future<List<Integer>> future : futures) {
-                /* List<Integer> vertices = */future.get();
-                // layer.addAll(vertices);
+            for (Future<Void> future : futures) {
+                future.get();
             }
-
-            // ++layerNum;
         }
     }
 
-    List<Integer> visitChildrenOf(int vertex, AtomicBoolean[] visited, Queue<Integer> next
-    /* AtomicInteger visitedNum */) {
-        // List<Integer> next = new ArrayList<>(adjList[vertex].size());
-
+    Void visitChildrenOf(int vertex, AtomicBoolean[] visited, Queue<Integer> next) {
         for (int n : adjList[vertex]) {
             if (!visited[n].compareAndSet(false, true)) {
                 continue;
             }
-
-            // int totalVisited =
-            // visitedNum.incrementAndGet();
-            // log.info("Visited vertex {}, total visited: {}/{}", n, totalVisited, V);
-
             next.add(n);
         }
-
         return null;
     }
 
