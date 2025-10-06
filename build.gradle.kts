@@ -52,6 +52,9 @@ tasks.register<JavaExec>("jcstress") {
 tasks.named<Test>("test") {
     // Use JUnit Platform for unit tests.
     useJUnitPlatform()
+
+      minHeapSize = "512m"
+  maxHeapSize = "8000m"
     
     testLogging {
         events("started", "passed", "skipped", "failed")
