@@ -2,7 +2,6 @@ package org.itmo;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentLinkedQueue;
-import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -37,6 +36,10 @@ class Graph {
         }
     }
 
+    List<Integer> childrenOf(int vertex) {
+        return adjList[vertex];
+    }
+
     void parallelBFS(int startVertex) throws InterruptedException, ExecutionException {
         AtomicBoolean[] visited = new AtomicBoolean[V];
         for (int i = 0; i < V; ++i) {
@@ -59,9 +62,7 @@ class Graph {
 
             List<Future<Void>> futures = Stream.of(queues)
                     .filter(queue -> !queue.isEmpty())
-                    .map(queue -> {
-                        return executorService.submit(() -> handleQueue(queue, visited, nextQueueLayer, nextQueueIdx));
-                    })
+                    .map(queue -> executorService.submit(() -> handleQueue(queue, visited, nextQueueLayer, nextQueueIdx)))
                     .collect(Collectors.toList());
 
             if (futures.isEmpty()) {
@@ -74,6 +75,11 @@ class Graph {
 
             queues = nextQueueLayer;
         }
+
+        long visitedNum = Stream.of(visited).filter(AtomicBoolean::get).count();
+
+        log.info("Visited {}/{} vertices", visitedNum, V);
+        log.info("Visit count: {}", nextQueueIdx.incrementAndGet());
     }
 
     Void handleQueue(Queue<Integer> vertices, AtomicBoolean[] visited, Queue<Integer>[] queues, AtomicInteger nextQueue) {

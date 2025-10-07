@@ -15,10 +15,8 @@ public class BFSTest {
 
     @Test
     public void bfsTest() throws IOException, InterruptedException, ExecutionException {
-        int[] sizes = new int[] { 10, 100, 1000, 10_000, 10_000, 50_000, 100_000,
-                1_000_000, 2_000_000 };
-        int[] connections = new int[] { 50, 500, 5000, 50_000, 100_000, 1_000_000,
-                1_000_000, 10_000_000, 10_000_000 };
+        int[] sizes = new int[] { 10, 100, 1000, 10_000, 10_000, 50_000, 100_000, 1_000_000, 2_000_000 };
+        int[] connections = new int[] { 50, 500, 5000, 50_000, 100_000, 1_000_000, 1_000_000, 10_000_000, 10_000_000 };
 
         Random r = new Random(42);
         try (FileWriter fw = new FileWriter("tmp/results.txt")) {
