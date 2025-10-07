@@ -2,11 +2,15 @@ package org.itmo;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -15,7 +19,9 @@ class Graph {
     private final int V;
     private final ArrayList<Integer>[] adjList;
 
-    private final ExecutorService executorService = Executors.newFixedThreadPool(28);
+    private static final int CORES_NUM = 28;
+
+    private final ExecutorService executorService = Executors.newFixedThreadPool(CORES_NUM);
 
     Graph(int vertices) {
         this.V = vertices;
@@ -37,39 +43,51 @@ class Graph {
             visited[i] = new AtomicBoolean(false);
         }
 
-        Queue<Integer> layer = new LinkedList<>();
+        AtomicInteger nextQueueIdx = new AtomicInteger(0);
+
+        Queue<Integer>[] queues = new Queue[1];
+        queues[0] = new ConcurrentLinkedQueue<>();
 
         visited[startVertex].set(true);
-        layer.add(startVertex);
+        queues[0].add(startVertex);
 
-        while (!layer.isEmpty()) {
-            Queue<Integer> nextLayer = new ConcurrentLinkedQueue<>();
-
-            List<Future<Void>> futures = new ArrayList<>(layer.size());
-
-            while (!layer.isEmpty()) {
-                int vertex = layer.poll();
-
-                Future<Void> future = executorService.submit(() -> visitChildrenOf(vertex, visited, nextLayer));
-
-                futures.add(future);
+        while (true) {
+            Queue<Integer>[] nextQueueLayer = new Queue[CORES_NUM];
+            for (int i = 0; i < CORES_NUM; ++i) {
+                nextQueueLayer[i] = new ConcurrentLinkedQueue<>();
             }
 
-            layer = nextLayer;
+            List<Future<Void>> futures = Stream.of(queues)
+                    .filter(queue -> !queue.isEmpty())
+                    .map(queue -> {
+                        return executorService.submit(() -> handleQueue(queue, visited, nextQueueLayer, nextQueueIdx));
+                    })
+                    .collect(Collectors.toList());
+
+            if (futures.isEmpty()) {
+                break;
+            }
 
             for (Future<Void> future : futures) {
                 future.get();
             }
+
+            queues = nextQueueLayer;
         }
     }
 
-    Void visitChildrenOf(int vertex, AtomicBoolean[] visited, Queue<Integer> next) {
-        for (int n : adjList[vertex]) {
-            if (!visited[n].compareAndSet(false, true)) {
-                continue;
+    Void handleQueue(Queue<Integer> vertices, AtomicBoolean[] visited, Queue<Integer>[] queues, AtomicInteger nextQueue) {
+        vertices.stream().forEach(startVertex -> {
+            for (int vertex : adjList[startVertex]) {
+                if (!visited[vertex].compareAndSet(false, true)) {
+                    continue;
+                }
+
+                int selectedQueue = nextQueue.incrementAndGet() % CORES_NUM;
+                queues[selectedQueue].add(vertex);
             }
-            next.add(n);
-        }
+        });
+
         return null;
     }
 
