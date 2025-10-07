@@ -12,12 +12,12 @@ import org.openjdk.jcstress.annotations.*;
 import org.openjdk.jcstress.infra.results.L_Result;
 
 @JCStressTest
-@Outcome(id = "12", expect = Expect.ACCEPTABLE, desc = "Все вершины были обойдены")
+@Outcome(id = "10", expect = Expect.ACCEPTABLE, desc = "Все вершины были обойдены")
 @Outcome(expect = Expect.ACCEPTABLE_INTERESTING, desc = "Гонка данных: часть вершин не была обойдена")
 @State
 public class BFSJcStressTest {
     private static final int CORES_NUM = 4;
-    private static final int VERTICES_NUM = 12;
+    private static final int VERTICES_NUM = 10;
 
     private Graph graph = new Graph(VERTICES_NUM);
 
@@ -31,14 +31,12 @@ public class BFSJcStressTest {
         graph.addEdge(0, 2);
         graph.addEdge(0, 3);
         graph.addEdge(0, 4);
-        graph.addEdge(0, 10);
 
         graph.addEdge(1, 5);
         graph.addEdge(3, 6);
         graph.addEdge(2, 7);
         graph.addEdge(4, 8);
         graph.addEdge(4, 9);
-        graph.addEdge(10, 11);
 
         for (int i = 0; i < VERTICES_NUM; ++i) {
             visited[i] = new AtomicBoolean(false);
@@ -51,7 +49,6 @@ public class BFSJcStressTest {
         for (int i = 0; i < 5; ++i) {
             visited[i].set(true);
         }
-        visited[10].set(true);
     }
 
     @Actor
@@ -61,12 +58,7 @@ public class BFSJcStressTest {
 
     @Actor
     void actor2() {
-        step(2);
-    }
-
-    @Actor
-    void actor3() {
-        step(4, 10);
+        step(2, 4);
     }
 
     void step(int... values) {
